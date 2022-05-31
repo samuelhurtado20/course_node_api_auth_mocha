@@ -3,6 +3,7 @@ import { UserCreateDto } from '../dtos/user.dto'
 import { ApplicationException } from '../common/exceptions/application.exception'
 import SHA from 'sha.js'
 import jwt from 'jsonwebtoken'
+// const fs = require('fs')
 
 export class IdentityService {
   async authenticate (email: string, password: string): Promise<string> {
@@ -15,18 +16,18 @@ export class IdentityService {
       'SELECT * FROM auth_user WHERE email = ? AND password = ?',
       [email, password]
     )
-
-    if (process.env.jwt_secret_key) {
-      const secretKey: string = process.env.jwt_secret_key
-
-      if (rows.length) {
+    console.log(process.env.jwt_secret_key)
+    if (rows.length) {
+      if (process.env.jwt_secret_key) {
+        const secretKey: string = process.env.jwt_secret_key
+        // const privateKey = fs.readFileSync('private.key')
         return jwt.sign({
           id: rows[0].id,
           email: rows[0].email
-        }, secretKey, { expiresIn: '7h', algorithm: 'ES256' })
+        }, secretKey, { expiresIn: '7h', algorithm: 'HS256' })
+      } else {
+        throw new Error('Secret key is not defined.')
       }
-    } else {
-      throw new Error('Secret key is not defined.')
     }
 
     throw new ApplicationException('Invalid user credentials supplied.')
